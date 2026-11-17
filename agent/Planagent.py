@@ -28,8 +28,7 @@ from transformers.agents.tools import (
 )
 ################################################################
 
-from LongVIL.prompts.Planagent_prompt import system_prompt_Plan
-from LongVIL.prompts.Planagent_prompt_noreflection import system_prompt_Plan_noreflection
+from LongVIL.prompts import load_prompt
 from LongVIL.engines import get_llm_engine
 from LongVIL.tools.tool_box import plan_tool_box,plan_tool_box_noreflection
 import logging
@@ -39,7 +38,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 def create_Plan_agent(args) -> ReactCodeAgent:
     llm_engine = get_llm_engine(args)
-    agentsystem_prompt = system_prompt_Plan
+    agentsystem_prompt = load_prompt("Planagent_prompt")
     toollist=plan_tool_box(args)
     react_agent = ReactCodeAgent(
         llm_engine=llm_engine,
@@ -65,7 +64,7 @@ def create_Plan_agent(args) -> ReactCodeAgent:
     return react_agent
 def create_Plan_agent_noreflection(args) -> ReactCodeAgent:
     llm_engine = get_llm_engine(args)
-    agentsystem_prompt = system_prompt_Plan_noreflection
+    agentsystem_prompt = load_prompt("Planagent_prompt_noreflection")
     toollist=plan_tool_box_noreflection(args)
     react_agent = ReactCodeAgent(
         llm_engine=llm_engine,

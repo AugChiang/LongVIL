@@ -1,0 +1,225 @@
+Here are examples showing the fixed plan-code verification workflow and bounded plan-code consistency correction.
+
+---
+
+Example1: CodeVerify confirms the generated code
+---------------------------------------
+You have been provided with these initial arguments: {'action_list': ['A hand picks up the orange cube and then places it into the box.'], 'save_path': './outputs/example/code_action1'}.
+
+Thought: The action list contains one verified pick-and-place action. I will generate candidate code for the action.
+Code:
+```py
+action_list = ["A hand picks up the orange cube and then places it into the box."]
+generated_code_list = [GenerateCode(text_commands=action) for action in action_list]
+print(generated_code_list)
+```
+<end_action>
+
+Observation:
+["<begin_code>
+orange_cube_pos = getpos('orange cube')
+moveto(orange_cube_pos)
+pick()
+box_into = getpos('box', 'into')
+moveto(box_into)
+place()
+<end_code>"]
+
+Thought: I will verify whether the generated code faithfully implements the verified action.
+Code:
+```py
+verification_result = CodeVerify(action_list=action_list, python_code=generated_code_list)
+print(verification_result)
+```
+<end_action>
+
+Observation:
+Verification Result: Yes
+[Action Understanding]: Picked object = 'orange cube'; Placement = 'into the box'
+[Code Analysis]: Code correctly implements this action.
+
+Thought: CodeVerify reports Verification Result: Yes, so the generated code is consistent with the verified action. I will strip the code tags, execute the verified code, and save it.
+Code:
+```py
+def strip_code_tags(code):
+    return code.replace("<begin_code>", "").replace("<end_code>", "").strip()
+
+verified_code_list = [strip_code_tags(code) for code in generated_code_list]
+code_to_execute = "
+".join(verified_code_list)
+execution_result = Execute(codelist=code_to_execute)
+print(execution_result)
+
+save_result = Savetext(savepath=save_path, result=verified_code_list)
+print(save_result)
+```
+<end_action>
+
+Observation:
+Execute Successfully!
+Appended code successfully.
+
+Thought: The verified code has been executed and saved. I will return completion.
+Code:
+```py
+final_answer("Task Done!")
+```
+<end_action>
+
+---
+
+Example2: CodeVerify detects a spatial-argument mismatch and plan-code consistency correction fixes it
+---------------------------------------
+You have been provided with these initial arguments: {'action_list': ['A hand picks up the banana and then places it to the left of the bowl.'], 'save_path': './outputs/example/code_spatial_correction'}.
+
+Thought: I will generate candidate code for the verified action.
+Code:
+```py
+action_list = ["A hand picks up the banana and then places it to the left of the bowl."]
+generated_code_list = [GenerateCode(text_commands=action) for action in action_list]
+print(generated_code_list)
+```
+<end_action>
+
+Observation:
+["<begin_code>
+banana_pos = getpos('banana')
+moveto(banana_pos)
+pick()
+bowl_top = getpos('bowl', 'top')
+moveto(bowl_top)
+place()
+<end_code>"]
+
+Thought: The generated code must be checked against the verified action before execution.
+Code:
+```py
+verification_result = CodeVerify(action_list=action_list, python_code=generated_code_list)
+print(verification_result)
+```
+<end_action>
+
+Observation:
+Verification Result: No
+[Action Understanding]: Picked object = 'banana'; Placement = 'to the left of the bowl'
+[Code Analysis]: Code has an error. It uses relation 'top' instead of 'left'.
+<begin_code>
+banana_pos = getpos('banana')
+moveto(banana_pos)
+pick()
+bowl_left = getpos('bowl', 'left')
+moveto(bowl_left)
+place()
+<end_code>
+
+Thought: CodeVerify reports Verification Result: No and provides corrected code. I will apply plan-code consistency correction by replacing only the code implementation; the verified action remains unchanged.
+Code:
+```py
+corrected_code = """
+banana_pos = getpos('banana')
+moveto(banana_pos)
+pick()
+bowl_left = getpos('bowl', 'left')
+moveto(bowl_left)
+place()
+""".strip()
+
+verified_code_list = [corrected_code]
+code_to_execute = "
+".join(verified_code_list)
+execution_result = Execute(codelist=code_to_execute)
+print(execution_result)
+
+save_result = Savetext(savepath=save_path, result=verified_code_list)
+print(save_result)
+```
+<end_action>
+
+Observation:
+Execute Successfully!
+Appended code successfully.
+
+Thought: The corrected code has been executed and saved. I will return completion.
+Code:
+```py
+final_answer("Task Done!")
+```
+<end_action>
+
+---
+
+Example3: Multi-action plan with drawer primitives and preserved order
+---------------------------------------
+You have been provided with these initial arguments: {'action_list': ['A hand opens the drawer.', 'A hand picks up the orange cube and then places it into the drawer.', 'A hand closes the drawer.'], 'save_path': './outputs/example/code_drawer'}.
+
+Thought: The verified plan contains drawer actions and one pick-and-place action. I will generate code for each action in order.
+Code:
+```py
+action_list = [
+    "A hand opens the drawer.",
+    "A hand picks up the orange cube and then places it into the drawer.",
+    "A hand closes the drawer."
+]
+generated_code_list = [GenerateCode(text_commands=action) for action in action_list]
+print(generated_code_list)
+```
+<end_action>
+
+Observation:
+["<begin_code>
+open()
+<end_code>", "<begin_code>
+orange_cube_pos = getpos('orange cube')
+moveto(orange_cube_pos)
+pick()
+drawer_into = getpos('drawer', 'into')
+moveto(drawer_into)
+place()
+<end_code>", "<begin_code>
+close()
+<end_code>"]
+
+Thought: I will verify the full action-code list jointly to ensure order, primitives, objects, and relation arguments are consistent with the verified plan.
+Code:
+```py
+verification_result = CodeVerify(action_list=action_list, python_code=generated_code_list)
+print(verification_result)
+```
+<end_action>
+
+Observation:
+Verification Result: Yes
+[Action Understanding]: Action = 'open drawer'
+[Code Analysis]: Code contains open().
+[Action Understanding]: Picked object = 'orange cube'; Placement = 'into drawer'
+[Code Analysis]: Code correctly implements this action.
+[Action Understanding]: Action = 'close drawer'
+[Code Analysis]: Code contains close().
+
+Thought: CodeVerify reports Verification Result: Yes, so the generated code is consistent with the verified plan. I will strip tags, preserve the action order, execute the combined code, and save one code string per action.
+Code:
+```py
+def strip_code_tags(code):
+    return code.replace("<begin_code>", "").replace("<end_code>", "").strip()
+
+verified_code_list = [strip_code_tags(code) for code in generated_code_list]
+code_to_execute = "
+".join(verified_code_list)
+execution_result = Execute(codelist=code_to_execute)
+print(execution_result)
+
+save_result = Savetext(savepath=save_path, result=verified_code_list)
+print(save_result)
+```
+<end_action>
+
+Observation:
+Execute Successfully!
+Appended code successfully.
+
+Thought: The verified code sequence has been executed and saved. I will return completion.
+Code:
+```py
+final_answer("Task Done!")
+```
+<end_action>

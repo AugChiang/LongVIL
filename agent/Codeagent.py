@@ -27,8 +27,7 @@ from transformers.agents.tools import (
     load_tool,
 )
 ##############################################################
-from LongVIL.prompts.Codeagent_prompt import system_prompt_code
-from LongVIL.prompts.Codeagent_prompt_noreflection import system_prompt_code_noreflection
+from LongVIL.prompts import load_prompt
 
 from LongVIL.engines import get_llm_engine
 from LongVIL.tools.tool_box import code_execution_tool_box,code_execution_noreflection_tool_box
@@ -40,7 +39,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 def create_Code_agent(args) -> ReactCodeAgent:
     # kwargs->api_key, engine_path etc. 
     llm_engine = get_llm_engine(args)
-    agentsystem_prompt = system_prompt_code
+    agentsystem_prompt = load_prompt("Codeagent_prompt")
     toollist=code_execution_tool_box(args)
     # toollist.append(TexttoCode(object_list=args.object_list))
     # toollist.append(Execute(args.object_list, args.save_path))
@@ -72,7 +71,7 @@ def create_Code_agent(args) -> ReactCodeAgent:
 def create_Code_agent_noreflection(args) -> ReactCodeAgent:
     # kwargs->api_key, engine_path etc. 
     llm_engine = get_llm_engine(args)
-    agentsystem_prompt = system_prompt_code_noreflection
+    agentsystem_prompt = load_prompt("Codeagent_prompt_noreflection")
     toollist=code_execution_noreflection_tool_box(args)
     # toollist.append(TexttoCode(object_list=args.object_list))
     # toollist.append(Execute(args.object_list, args.save_path))

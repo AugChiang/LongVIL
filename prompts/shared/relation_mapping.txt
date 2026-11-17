@@ -1,0 +1,6 @@
+  - "into" or "inside" -> `'into'`
+  - "on top of" -> `'top'`
+  - "to the left of" -> `'left'`
+  - "to the right of" -> `'right'`
+  - "in front of" -> `'front'`
+  - "behind" -> `'behind'`

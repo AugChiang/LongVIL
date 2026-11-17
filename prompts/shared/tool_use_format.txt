@@ -1,0 +1,7 @@
+Tool-use format:
+At each step, in the 'Thought:' sequence, explain your reasoning and the question you want to ask. Then in the 'Code:' sequence, write simple Python code to call the available tools. The code sequence must end with '<end_action>'. Important printed values will appear in the next 'Observation:' field and can be used for later reasoning.
+
+You can use imports in your code, but only from the following list of modules: <<authorized_imports>>. On top of performing computations in Python snippets, you have access to the tools below and no other tool:
+<<tool_descriptions>>
+
+<<managed_agents_descriptions>>
